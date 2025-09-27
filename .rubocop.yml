@@ -1,0 +1,52 @@
+inherit_from:
+  - .rubocop_todo.yml
+
+AllCops:
+  TargetRubyVersion: 3.1
+  Exclude:
+    - spec/**/*
+  NewCops: enable
+  SuggestExtensions: false
+
+Layout/EndOfLine:
+  EnforcedStyle: lf
+
+Layout/LineEndStringConcatenationIndentation:
+  Enabled: false
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented_relative_to_receiver
+
+Lint/AmbiguousOperatorPrecedence:
+  Enabled: false
+
+Lint/StructNewOverride:
+  Enabled: false
+
+Naming/VariableNumber:
+  EnforcedStyle: snake_case
+  CheckSymbols: false
+
+Style/AccessorGrouping:
+  EnforcedStyle: separated
+
+Style/Alias:
+  EnforcedStyle: prefer_alias_method
+
+Style/EmptyMethod:
+  EnforcedStyle: expanded
+
+Style/HashAsLastArrayItem:
+  EnforcedStyle: no_braces
+
+Style/RaiseArgs:
+  EnforcedStyle: compact
+
+Style/SymbolArray:
+  EnforcedStyle: brackets
+
+Style/TrailingUnderscoreVariable:
+  Enabled: false
+
+Style/WordArray:
+  EnforcedStyle: brackets
