@@ -23,6 +23,9 @@ Lint/AmbiguousOperatorPrecedence:
 Lint/StructNewOverride:
   Enabled: false
 
+Metrics/MethodLength:
+  Max: 20
+
 Naming/VariableNumber:
   EnforcedStyle: snake_case
   CheckSymbols: false
@@ -38,6 +41,9 @@ Style/EmptyMethod:
 
 Style/HashAsLastArrayItem:
   EnforcedStyle: no_braces
+
+Style/IfUnlessModifier:
+  Enabled: false
 
 Style/RaiseArgs:
   EnforcedStyle: compact
