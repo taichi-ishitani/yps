@@ -11,7 +11,7 @@ require_relative 'yps/visitors'
 
 module YPS
   class << self
-    def load( # rubocop:disable Metrics/ParameterLists
+    def safe_load( # rubocop:disable Metrics/ParameterLists
       yaml,
       permitted_classes: [], permitted_symbols: [], aliases: false, filename: nil,
       fallback: nil, symbolize_names: false, freeze: false, strict_integer: false

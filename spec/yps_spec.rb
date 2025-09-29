@@ -9,7 +9,7 @@ RSpec.describe YPS do
     eq(value).and have_position_info(line:, column:, filename:)
   end
 
-  describe '.load' do
+  describe '.safe_load' do
     it 'parses the given YAML and add position information to each parsed elements' do
       yaml = <<~'YAML'
       children:
@@ -18,7 +18,7 @@ RSpec.describe YPS do
         - name: Kaede
           age: 3
       YAML
-      result = YPS.load(yaml)
+      result = YPS.safe_load(yaml)
 
       expect(result).to have_position_info(line: 1, column: 1)
       expect(result['children']).to have_position_info(line: 2, column: 3)
@@ -33,15 +33,15 @@ RSpec.describe YPS do
     end
 
     describe 'the permitted_classes option' do
-      it 'specifies additonal classed which are allowed to be loaded' do
+      it 'specifies additonal classed which are allowed to be safe_loaded' do
         yaml = <<~'YAML'
         - 2025-09-28
         - :foo
         YAML
 
-        expect { YPS.load(yaml) }.to raise_error Psych::DisallowedClass
+        expect { YPS.safe_load(yaml) }.to raise_error Psych::DisallowedClass
 
-        result = YPS.load(yaml, permitted_classes: [Symbol, Date])
+        result = YPS.safe_load(yaml, permitted_classes: [Symbol, Date])
         expect(result[0]).to match_element(Date.new(2025, 9, 28), line: 1, column: 3)
         expect(result[1]).to match_element(:foo, line: 2, column: 3)
       end
@@ -55,19 +55,19 @@ RSpec.describe YPS do
         YAML
       end
       context 'when no symbols are specified' do
-        specify 'any symbols can be loaded' do
-          result = YPS.load(yaml, permitted_classes: [Symbol])
+        specify 'any symbols can be safe_loaded' do
+          result = YPS.safe_load(yaml, permitted_classes: [Symbol])
           expect(result[0]).to match_element(:foo, line: 1, column: 3)
           expect(result[1]).to match_element(:bar, line: 2, column: 3)
         end
       end
 
       context 'when symbols are specified' do
-        specify 'the given symbols can only be loaded' do
-          expect { YPS.load(yaml, permitted_classes: [Symbol], permitted_symbols: [:foo]) }
+        specify 'the given symbols can only be safe_loaded' do
+          expect { YPS.safe_load(yaml, permitted_classes: [Symbol], permitted_symbols: [:foo]) }
             .to raise_error Psych::DisallowedClass
 
-          result = YPS.load(yaml, permitted_classes: [Symbol], permitted_symbols: [:foo, :bar])
+          result = YPS.safe_load(yaml, permitted_classes: [Symbol], permitted_symbols: [:foo, :bar])
           expect(result[0]).to match_element(:foo, line: 1, column: 3)
           expect(result[1]).to match_element(:bar, line: 2, column: 3)
         end
@@ -84,10 +84,10 @@ RSpec.describe YPS do
         YAML
 
         error_class = RUBY_VERSION >= '3.2.0' && Psych::AliasesNotEnabled || Psych::BadAlias
-        expect { YPS.load(yaml) }.to raise_error error_class
-        expect { YPS.load(yaml, aliases: false) }.to raise_error error_class
+        expect { YPS.safe_load(yaml) }.to raise_error error_class
+        expect { YPS.safe_load(yaml, aliases: false) }.to raise_error error_class
 
-        result = YPS.load(yaml, aliases: true)
+        result = YPS.safe_load(yaml, aliases: true)
         expect(result[0]).to have_position_info(line: 1, column: 3)
         expect(result[0][0]).to match_element('foo', line: 2, column: 5)
         expect(result[0][1]).to match_element('bar', line: 3, column: 5)
@@ -107,7 +107,7 @@ RSpec.describe YPS do
             age: 3
         YAML
         filename = 'test.yaml'
-        result = YPS.load(yaml, filename:)
+        result = YPS.safe_load(yaml, filename:)
 
         expect(result).to have_position_info(line: 1, column: 1, filename:)
         expect(result['children']).to have_position_info(line: 2, column: 3, filename:)
@@ -124,11 +124,11 @@ RSpec.describe YPS do
 
     describe 'the fallback option' do
       it 'specifies the return value which will be returned when an empty YAML is given' do
-        result = YPS.load('')
+        result = YPS.safe_load('')
         expect(result).to be_nil
 
         fallback = []
-        result = YPS.load('', fallback:)
+        result = YPS.safe_load('', fallback:)
         expect(result).to equal(fallback)
       end
     end
@@ -143,7 +143,7 @@ RSpec.describe YPS do
             baz: 3
         YAML
 
-        result = YPS.load(yaml)
+        result = YPS.safe_load(yaml)
         expect(result).to have_position_info(line: 1, column: 1)
         expect(result['foo']).to have_position_info(line: 2, column: 3)
         expect(result['foo'][0]).to have_position_info(line: 2, column: 5)
@@ -153,7 +153,7 @@ RSpec.describe YPS do
         expect(result['foo'][1]['bar']).to match_element(2, line: 4, column: 10)
         expect(result['foo'][1]['baz']).to match_element(3, line: 5, column: 10)
 
-        result = YPS.load(yaml, symbolize_names: false)
+        result = YPS.safe_load(yaml, symbolize_names: false)
         expect(result).to have_position_info(line: 1, column: 1)
         expect(result['foo']).to have_position_info(line: 2, column: 3)
         expect(result['foo'][0]).to have_position_info(line: 2, column: 5)
@@ -163,7 +163,7 @@ RSpec.describe YPS do
         expect(result['foo'][1]['bar']).to match_element(2, line: 4, column: 10)
         expect(result['foo'][1]['baz']).to match_element(3, line: 5, column: 10)
 
-        result = YPS.load(yaml, symbolize_names: true)
+        result = YPS.safe_load(yaml, symbolize_names: true)
         expect(result).to have_position_info(line: 1, column: 1)
         expect(result[:foo]).to have_position_info(line: 2, column: 3)
         expect(result[:foo][0]).to have_position_info(line: 2, column: 5)
@@ -182,7 +182,7 @@ RSpec.describe YPS do
         - qux
         YAML
 
-        result = YPS.load(yaml)
+        result = YPS.safe_load(yaml)
         expect(result).not_to be_frozen
         expect(result[0]).not_to be_frozen
         expect(result[0][0]).not_to be_frozen
@@ -191,7 +191,7 @@ RSpec.describe YPS do
         expect(result[0][2]).not_to be_frozen
         expect(result[1]).not_to be_frozen
 
-        result = YPS.load(yaml, freeze: false)
+        result = YPS.safe_load(yaml, freeze: false)
         expect(result).not_to be_frozen
         expect(result[0]).not_to be_frozen
         expect(result[0][0]).not_to be_frozen
@@ -199,7 +199,7 @@ RSpec.describe YPS do
         expect(result[0][2]).not_to be_frozen
         expect(result[1]).not_to be_frozen
 
-        result = YPS.load(yaml, freeze: true)
+        result = YPS.safe_load(yaml, freeze: true)
         expect(result).to be_frozen
         expect(result[0]).to be_frozen
         expect(result[0][0]).to be_frozen
@@ -214,26 +214,26 @@ RSpec.describe YPS do
         it 'specifies whether or not integer values can include comma' do
           yaml = '1,000'
 
-          result = YPS.load(yaml)
+          result = YPS.safe_load(yaml)
           expect(result).to match_element(1000, line: 1, column: 1)
 
-          result = YPS.load(yaml, strict_integer: false)
+          result = YPS.safe_load(yaml, strict_integer: false)
           expect(result).to match_element(1000, line: 1, column: 1)
 
-          result = YPS.load(yaml, strict_integer: true)
+          result = YPS.safe_load(yaml, strict_integer: true)
           expect(result).to match_element('1,000', line: 1, column: 1)
         end
       else
         it 'is ignored' do
           yaml = '1,000'
 
-          result = YPS.load(yaml)
+          result = YPS.safe_load(yaml)
           expect(result).to match_element(1000, line: 1, column: 1)
 
-          result = YPS.load(yaml, strict_integer: false)
+          result = YPS.safe_load(yaml, strict_integer: false)
           expect(result).to match_element(1000, line: 1, column: 1)
 
-          result = YPS.load(yaml, strict_integer: true)
+          result = YPS.safe_load(yaml, strict_integer: true)
           expect(result).to match_element(1000, line: 1, column: 1)
         end
       end
