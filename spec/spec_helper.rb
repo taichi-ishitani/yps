@@ -14,4 +14,6 @@ RSpec.configure do |config|
   end
 end
 
+RSpec::Matchers.define_negated_matcher :be_mutable, :be_frozen
+
 require 'yps'

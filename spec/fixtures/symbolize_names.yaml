@@ -1,0 +1,5 @@
+foo:
+  - bar: 0
+    baz: 1
+  - qux: 2
+    quu: 3

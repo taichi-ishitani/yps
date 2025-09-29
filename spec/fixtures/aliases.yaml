@@ -1,0 +1,4 @@
+- &foo_bar
+  - foo
+  - bar
+- *foo_bar

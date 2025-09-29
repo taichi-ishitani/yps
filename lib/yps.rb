@@ -39,6 +39,22 @@ module YPS
       visitor.accept(result)
     end
 
+    def load(yaml, permitted_classes: [Symbol], **kwargs)
+      safe_load(yaml, permitted_classes:, **kwargs)
+    end
+
+    def safe_load_file(filename, **kwargs)
+      File.open(filename, 'r:bom|utf-8') do |f|
+        safe_load(f, filename:, **kwargs)
+      end
+    end
+
+    def load_file(filename, **kwargs)
+      File.open(filename, 'r:bom|utf-8') do |f|
+        load(f, filename:, **kwargs)
+      end
+    end
+
     private
 
     def parse(yaml, filename)
