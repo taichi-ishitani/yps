@@ -19,7 +19,38 @@ gem install yps
 
 ## Usage
 
-TODO: Write usage instructions here
+You can use the methods below to load a YAML code into Ruby objects with their position information (file name, line, and column).
+
+* `YPS.safe_load`/`YPS.load`
+    * Load the given YAML string into Ruby objects with position information.
+* `YPS.safe_load_file`/`YPS.load_file`
+    * Load the YAML code read from the given file path into Ruby objects with position information.
+
+Parsed objects, except for hash keys, have their own position information.
+You can use the `position` method to get position information in the original YAML of the receiver object.
+
+```ruby
+require 'yps'
+
+yaml = YPS.load(<<~'YAML')
+children:
+  - name: kanta
+    age: 8
+  - name: kaede
+    age: 3
+YAML
+
+# output
+# name: kanta (filename: unknown line 2 column 11)
+# age: 8 (filename: unknown line 3 column 10)
+# name: kaede (filename: unknown line 4 column 11)
+# age: 3 (filename: unknown line 5 column 10)
+yaml['children'].each do |child|
+  child.each do |key, value|
+    puts "#{key}: #{value} (#{value.position})"
+  end
+end
+```
 
 ## Contributing
 

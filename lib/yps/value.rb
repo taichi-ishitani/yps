@@ -5,6 +5,10 @@ module YPS
     def self.create(filename, start_line, start_column)
       new(filename, start_line + 1, start_column + 1).freeze
     end
+
+    def to_s
+      "filename: #{filename || 'unknown'} line #{line} column #{column}"
+    end
   end
 
   class Value < SimpleDelegator
