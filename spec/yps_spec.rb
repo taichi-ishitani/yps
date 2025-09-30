@@ -189,6 +189,34 @@ RSpec.describe YPS do
         end
       end
     end
+
+    describe 'the value_class option' do
+      def match_value(value, line:, column:, filename:)
+        have_attributes(value: eq(value)).and have_position_info(line:, column:, filename:)
+      end
+
+      it 'specifies the class wrapping parsed elements' do
+        klass = Struct.new(:value, :position)
+
+        result, filename = load_fixture('basic.yaml', value_class: klass)
+        expect(result).to have_position_info(line: 1, column: 1, filename:)
+        expect(result.value['children']).to have_position_info(line: 2, column: 3, filename:)
+
+        expect(result.value['children'].value[0])
+          .to have_position_info(line: 2, column: 5, filename:)
+        expect(result.value['children'].value[0].value['name'])
+          .to match_value('Kanta', line: 2, column: 11, filename:)
+        expect(result.value['children'].value[0].value['age'])
+          .to match_value(8, line: 3, column: 10, filename:)
+
+        expect(result.value['children'].value[1])
+          .to have_position_info(line: 4, column: 5, filename:)
+        expect(result.value['children'].value[1].value['name'])
+          .to match_value('Kaede', line: 4, column: 11, filename:)
+        expect(result.value['children'].value[1].value['age'])
+          .to match_value(3, line: 5, column: 10, filename:)
+      end
+    end
   end
 
   describe '.safe_load' do

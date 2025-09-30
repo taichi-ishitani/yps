@@ -5,18 +5,23 @@ module YPS
     using NodeExtension
 
     module Common
+      def initialize(scanner, class_loader, value_class, symbolize_names:, freeze:)
+        super(scanner, class_loader, symbolize_names:, freeze:)
+        @value_class = value_class
+      end
+
       def accept(node)
         object = super
-        add_position_info(object, node)
+        create_wrapped_object(object, node)
       end
 
       private
 
-      def add_position_info(object, node)
+      def create_wrapped_object(object, node)
         return object if node.document? || node.mapping_key?
 
         pos = Position.create(node.filename, node.start_line, node.start_column)
-        obj = Value.new(object, pos)
+        obj = @value_class.new(object, pos)
         @freeze && obj.freeze || obj
       end
     end

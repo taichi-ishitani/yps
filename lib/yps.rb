@@ -13,8 +13,9 @@ module YPS
   class << self
     def safe_load( # rubocop:disable Metrics/ParameterLists
       yaml,
-      permitted_classes: [], permitted_symbols: [], aliases: false, filename: nil,
-      fallback: nil, symbolize_names: false, freeze: false, strict_integer: false
+      permitted_classes: [], permitted_symbols: [], aliases: false,
+      filename: nil, fallback: nil, symbolize_names: false, freeze: false,
+      strict_integer: false, value_class: Value
     )
       result = parse(yaml, filename)
       return fallback unless result
@@ -31,9 +32,9 @@ module YPS
         end
       visitor =
         if aliases
-          Visitors::ToRuby.new(scanner, class_loader, symbolize_names:, freeze:)
+          Visitors::ToRuby.new(scanner, class_loader, value_class, symbolize_names:, freeze:)
         else
-          Visitors::NoAliasRuby.new(scanner, class_loader, symbolize_names:, freeze:)
+          Visitors::NoAliasRuby.new(scanner, class_loader, value_class, symbolize_names:, freeze:)
         end
 
       visitor.accept(result)
