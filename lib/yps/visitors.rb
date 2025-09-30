@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module YPS
+module YPS # :nodoc: all
   module Visitors
     using NodeExtension
 
@@ -20,7 +20,7 @@ module YPS
       def create_wrapped_object(object, node)
         return object if node.document? || node.mapping_key?
 
-        pos = Position.create(node.filename, node.start_line, node.start_column)
+        pos = Position.new(node.filename, node.start_line, node.start_column)
         obj = @value_class.new(object, pos)
         @freeze && obj.freeze || obj
       end

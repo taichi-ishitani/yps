@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module YPS
+module YPS # :nodoc: all
   module NodeExtension
     refine Psych::Nodes::Node do
       attr_accessor :filename

@@ -1,0 +1,28 @@
+---
+encoding: UTF-8
+static_path: []
+rdoc_include: []
+page_dir:
+charset: UTF-8
+embed_mixins: false
+exclude:
+- "~\\z"
+- "\\.orig\\z"
+- "\\.rej\\z"
+- "\\.bak\\z"
+- "\\.gemspec\\z"
+hyperlink_all: false
+line_numbers: true
+locale_dir: locale
+locale_name:
+main_page: README.md
+markup: rdoc
+output_decoration: true
+show_hash: true
+skip_tests: true
+tab_width: 8
+template_stylesheets: []
+title: 'YPS: YAML Positioning System'
+visibility: :protected
+warn_missing_rdoc_ref: false
+webcvs:

@@ -1,23 +1,61 @@
 # frozen_string_literal: true
 
 module YPS
-  Position = Struct.new(:filename, :line, :column) do
-    def self.create(filename, start_line, start_column)
-      new(filename, start_line + 1, start_column + 1).freeze
+  ##
+  # Position is a placeholder retaining position information of a parsed object.
+  #
+  # Fields:
+  # +filename+::
+  #   File name of the original YAML file.
+  # +line+::
+  #   Line number in the original YAML string where a parsed object is started.
+  # +column+::
+  #   Column number in the original YAML string where a parsed object is started.
+  class Position
+    def initialize(filename, start_line, start_column) # :nodoc:
+      @filename = filename
+      @line = start_line + 1
+      @column = start_column + 1
     end
 
+    ##
+    # Accessor for the filename of the orignal YAML file
+    attr_reader :filename
+
+    ##
+    # Accessor for the line number where the parsed object is started.
+    attr_reader :line
+
+    ##
+    # Accessor for the column number where the parsed object is started.
+    attr_reader :column
+
+    ##
+    # Return a string representing the position information.
     def to_s
       "filename: #{filename || 'unknown'} line #{line} column #{column}"
     end
   end
 
+  ##
+  # Value is a wrapper class for a parsed object and serves two main functions:
+  #
+  # 1. As a placeholder and accessor for the position information of the wrapped object (via the #position method).
+  # 2. Forwarding received method calls to the wrapped object.
   class Value < SimpleDelegator
-    def initialize(value, position)
+    def initialize(value, position) # :nodoc:
       super(value)
       @position = position
     end
 
-    alias_method :value, :__getobj__
+    ##
+    # Accessor for the wrapped object
+    def value
+      __getobj__
+    end
+
+    ##
+    # Accessor for the position information of the wrapped object
     attr_reader :position
   end
 end

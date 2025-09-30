@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module YPS
+module YPS # :nodoc: all
   using NodeExtension
 
   class Handler < Psych::Handlers::DocumentStream

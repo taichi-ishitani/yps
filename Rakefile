@@ -14,6 +14,12 @@ unless ENV.key?('CI')
   RuboCop::RakeTask.new(:rubocop)
 
   require 'bump/tasks'
+
+  require 'rdoc/task'
+  RDoc::Task.new do |rdoc|
+    rdoc.rdoc_dir = 'doc'
+    rdoc.rdoc_files.include('README.md', 'LICENSE.txt', 'CODE_OF_CONDUCT.md', 'lib/')
+  end
 end
 
 task default: :spec

@@ -1,6 +1,6 @@
 # YPS: YAML Positioning System
 
-YPS is a gem to parse YAML and add position information (file path, line and column) to each parsed elements.
+YPS is a gem to parse YAML and add position information (file name, line and column) to each parsed elements.
 This is useful for error reporting and debugging, allowing developers to precisely locate an issue within the original YAML file.
 
 ## Installation
