@@ -12,10 +12,11 @@ module YPS
   # +column+::
   #   Column number in the original YAML string where a parsed object is started.
   class Position
-    def initialize(filename, start_line, start_column) # :nodoc:
+    def initialize(filename, line, column) # :nodoc:
       @filename = filename
-      @line = start_line + 1
-      @column = start_column + 1
+      @line = line
+      @column = column
+      freeze
     end
 
     ##
@@ -35,12 +36,20 @@ module YPS
     def to_s
       "filename: #{filename || 'unknown'} line #{line} column #{column}"
     end
+
+    ##
+    # Equality operator.
+    # Check whether or not self and +other+ point the same position.
+    def ==(other)
+      filename == other.filename && line == other.line && column == other.column
+    end
   end
 
   ##
   # Value is a wrapper class for a parsed object and serves two main functions:
   #
-  # 1. As a placeholder and accessor for the position information of the wrapped object (via the #position method).
+  # 1. As a placeholder and accessor for the position information of
+  #    the wrapped object (via the #position method).
   # 2. Forwarding received method calls to the wrapped object.
   class Value < SimpleDelegator
     def initialize(value, position) # :nodoc:

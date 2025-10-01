@@ -20,7 +20,7 @@ module YPS # :nodoc: all
       def create_wrapped_object(object, node)
         return object if node.document? || node.mapping_key?
 
-        pos = Position.new(node.filename, node.start_line, node.start_column)
+        pos = Position.new(node.filename, node.start_line + 1, node.start_column + 1)
         obj = @value_class.new(object, pos)
         @freeze && obj.freeze || obj
       end
