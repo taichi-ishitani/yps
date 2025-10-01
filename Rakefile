@@ -18,7 +18,6 @@ unless ENV.key?('CI')
   require 'rdoc/task'
   RDoc::Task.new do |rdoc|
     rdoc.rdoc_dir = 'doc'
-    rdoc.rdoc_files.include('README.md', 'LICENSE.txt', 'CODE_OF_CONDUCT.md', 'lib/')
   end
 end
 

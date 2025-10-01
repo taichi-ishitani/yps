@@ -67,4 +67,4 @@ YPS is licensed under the terms of the [MIT License](https://opensource.org/lice
 
 ## Code of Conduct
 
-Everyone interacting in the Yps project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/taichi-ishitani/yps/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the YPS project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/taichi-ishitani/yps/blob/master/CODE_OF_CONDUCT.md).
