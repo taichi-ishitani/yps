@@ -1,3 +1,8 @@
+[![Gem Version](https://badge.fury.io/rb/yps.svg)](https://badge.fury.io/rb/yps)
+[![CI](https://github.com/taichi-ishitani/yps/actions/workflows/ci.yml/badge.svg)](https://github.com/taichi-ishitani/yps/actions/workflows/ci.yml)
+[![Maintainability](https://qlty.sh/gh/taichi-ishitani/projects/yps/maintainability.svg)](https://qlty.sh/gh/taichi-ishitani/projects/yps)
+[![codecov](https://codecov.io/gh/taichi-ishitani/yps/graph/badge.svg?token=JwmT4kfLYG)](https://codecov.io/gh/taichi-ishitani/yps)
+
 # YPS: YAML Positioning System
 
 YPS is a gem to parse YAML and add position information (file name, line and column) to each parsed elements.
