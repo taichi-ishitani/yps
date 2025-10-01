@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ['lib']
 
-  spec.extra_rdoc_files += spec.files.grep(%r{\A[^\/]+\.(?:txt|md)\z})
+  spec.extra_rdoc_files += spec.files.grep(%r{\A[^/]+\.(?:txt|md)\z})
   spec.rdoc_options = [
     '--main', 'README.md',
     '--title', spec.summary,
