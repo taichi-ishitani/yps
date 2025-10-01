@@ -21,4 +21,10 @@ unless ENV.key?('CI')
   end
 end
 
+desc 'Run all RSpec code exmaples and collect code coverage'
+task :coverage do
+  ENV['COVERAGE'] = 'yes'
+  Rake::Task['spec'].execute
+end
+
 task default: :spec

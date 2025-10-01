@@ -2,6 +2,8 @@
 
 require 'bundler/setup'
 
+RSpec::Matchers.define_negated_matcher :be_mutable, :be_frozen
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = '.rspec_status'
@@ -12,8 +14,16 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
-end
 
-RSpec::Matchers.define_negated_matcher :be_mutable, :be_frozen
+  if ENV.key?('COVERAGE')
+    require 'simplecov'
+    SimpleCov.start
+
+    if ENV.key?('CI')
+      require 'simplecov-cobertura'
+      SimpleCov.formatter = SimpleCov::Formatter::CoberturaFormatter
+    end
+  end
+end
 
 require 'yps'
