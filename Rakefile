@@ -9,16 +9,16 @@ CLOBBER << '.rspec_status'
 
 RSpec::Core::RakeTask.new(:spec)
 
+require 'rdoc/task'
+RDoc::Task.new do |rdoc|
+  rdoc.rdoc_dir = 'doc'
+end
+
 unless ENV.key?('CI')
   require 'rubocop/rake_task'
   RuboCop::RakeTask.new(:rubocop)
 
   require 'bump/tasks'
-
-  require 'rdoc/task'
-  RDoc::Task.new do |rdoc|
-    rdoc.rdoc_dir = 'doc'
-  end
 end
 
 desc 'Run all RSpec code exmaples and collect code coverage'
