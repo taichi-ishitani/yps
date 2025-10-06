@@ -25,6 +25,10 @@ module YPS # :nodoc: all
   end
 
   class Parser < Psych::Parser
+    def self.parse(yaml, filename, &)
+      new(&).parse(yaml, filename)
+    end
+
     def initialize(&)
       super(Handler.new(&))
     end

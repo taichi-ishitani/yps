@@ -7,7 +7,7 @@ require_relative 'yps/version'
 require_relative 'yps/value'
 require_relative 'yps/node_extension'
 require_relative 'yps/parser'
-require_relative 'yps/visitors'
+require_relative 'yps/visitor'
 
 ##
 # = YPS: YAML Positioning Sysmte
@@ -21,6 +21,8 @@ module YPS
     ##
     # Safely load the YAML string in +yaml+ and add position information (file name line and column)
     # to each parsed objects except for hash keys.
+    #
+    # Load the 1st documetns only if the given YAML contains multiple documents.
     #
     # Parsed objects will be wrapped by YPS::Value class to add the accessor returning the position information.
     # You can use the +value_class+ to specify your own wrapper class.
@@ -59,27 +61,16 @@ module YPS
       filename: nil, fallback: nil, symbolize_names: false, freeze: false,
       strict_integer: false, value_class: Value
     )
-      result = parse(yaml, filename)
-      return fallback unless result
+      Parser.parse(yaml, filename) do |node|
+        visitor =
+          Visitor.create(
+            permitted_classes, permitted_symbols, aliases,
+            symbolize_names, freeze, strict_integer, value_class
+          )
+        return visitor.accept(node)
+      end
 
-      class_loader =
-        Psych::ClassLoader::Restricted.new(
-          permitted_classes.map(&:to_s), permitted_symbols.map(&:to_s)
-        )
-      scanner =
-        if RUBY_VERSION >= '3.2.0'
-          Psych::ScalarScanner.new(class_loader, strict_integer:)
-        else
-          Psych::ScalarScanner.new(class_loader)
-        end
-      visitor =
-        if aliases
-          Visitors::ToRuby.new(scanner, class_loader, value_class, symbolize_names:, freeze:)
-        else
-          Visitors::NoAliasRuby.new(scanner, class_loader, value_class, symbolize_names:, freeze:)
-        end
-
-      visitor.accept(result)
+      fallback
     end
 
     ##
@@ -95,9 +86,7 @@ module YPS
     #
     # See also YPS.safe_load
     def safe_load_file(filename, **kwargs)
-      File.open(filename, 'r:bom|utf-8') do |f|
-        safe_load(f, filename:, **kwargs)
-      end
+      open_file(filename) { |f| safe_load(f, filename:, **kwargs) }
     end
 
     ##
@@ -105,19 +94,67 @@ module YPS
     #
     # See also YPS.load
     def load_file(filename, **kwargs)
-      File.open(filename, 'r:bom|utf-8') do |f|
-        load(f, filename:, **kwargs)
+      open_file(filename) { |f| load(f, filename:, **kwargs) }
+    end
+
+    DEFAULT_VALUE = Object.new.freeze
+    private_constant :DEFAULT_VALUE
+
+    ##
+    # Similar to +YPS.safe_load+, but load all documents given in +yaml+ and return them as a list.
+    #
+    # See also YPS.safe_load
+    def safe_load_stream( # rubocop:disable Metrics/ParameterLists
+      yaml,
+      permitted_classes: [], permitted_symbols: [], aliases: false,
+      filename: nil, fallback: DEFAULT_VALUE, symbolize_names: false,
+      freeze: false, strict_integer: false, value_class: Value
+    )
+      visitor = nil
+      results = []
+      Parser.parse(yaml, filename) do |node|
+        visitor ||=
+          Visitor.create(
+            permitted_classes, permitted_symbols, aliases,
+            symbolize_names, freeze, strict_integer, value_class
+          )
+        results << visitor.accept(node)
       end
+      return fallback if results.empty? && !fallback.equal?(DEFAULT_VALUE)
+
+      results
+    end
+
+    ##
+    # Similar to +YPS.safe_load_sream+, but Symbol is allowed to be loaded by default.
+    #
+    # See also YPS.safe_load_stream
+    def load_stream(yaml, permitted_classes: [Symbol], **kwargs)
+      safe_load_stream(yaml, permitted_classes:, **kwargs)
+    end
+
+    ##
+    # Similar to +YPS.safe_load_stream+,
+    # but the YAML string is read from the file specified by the +filename+ argument.
+    #
+    # See also YPS.safe_load_stream
+    def safe_load_stream_file(filename, **kwargs)
+      open_file(filename) { |f| safe_load_stream(f, filename:, **kwargs) }
+    end
+
+    ##
+    # Similar to +YPS.load_stream+,
+    # but the YAML string is read from the file specified by the +filename+ argument.
+    #
+    # See also YPS.load_stream
+    def load_stream_file(filename, **kwargs)
+      open_file(filename) { |f| load_stream(f, filename:, **kwargs) }
     end
 
     private
 
-    def parse(yaml, filename)
-      Parser
-        .new { |node| return node }
-        .parse(yaml, filename)
-
-      false
+    def open_file(filename, &)
+      File.open(filename, 'r:bom|utf-8', &)
     end
   end
 end
