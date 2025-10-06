@@ -16,10 +16,14 @@ Gem::Specification.new do |spec|
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.1'
 
-  spec.metadata['homepage_uri'] = spec.homepage
-  spec.metadata['source_code_uri'] = spec.homepage
-  spec.metadata['documentation_uri'] = 'https://taichi-ishitani.github.io/yps/'
-  spec.metadata['rubygems_mfa_required'] = 'true'
+  spec.metadata = {
+    'bug_tracker_uri' => "#{spec.homepage}/issues",
+    'changelog_uri' => "#{spec.homepage}/releases",
+    'documentation_uri' => 'https://taichi-ishitani.github.io/yps/',
+    'homepage_uri' => spec.homepage,
+    'rubygems_mfa_required' => 'true',
+    'source_code_uri' => spec.homepage
+  }
 
   spec.files = Dir.chdir(__dir__) do
     `git ls-files -z lib *.md *.txt`.split("\x0")
