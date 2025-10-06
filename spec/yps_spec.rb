@@ -15,6 +15,10 @@ RSpec.describe YPS do
     matcher.and have_position_info(line:, column:, filename:)
   end
 
+  def be_nil_element(line:, column:, filename: nil)
+    have_attributes(value: be_nil).and have_position_info(line:, column:, filename:)
+  end
+
   def file_fixture_path(filename)
     File.join(__dir__, 'fixtures', filename)
   end
@@ -23,7 +27,7 @@ RSpec.describe YPS do
     File.read(file_fixture_path(filename))
   end
 
-  shared_examples 'an YAML loader' do
+  shared_examples 'an YAML loader' do |safe_loader:, file_input:, multiple_documents:|
     it 'parses the given YAML and add position information to each parsed elements' do
       result, filename = load_fixture('basic.yaml')
 
@@ -39,8 +43,48 @@ RSpec.describe YPS do
       expect(result['children'][1]['age']).to match_element(3, line: 5, column: 10, filename:)
     end
 
+    if safe_loader
+      specify 'Symbol is not allowed to be load by default' do
+        expect { load_fixture('symbols.yaml') }.to raise_error Psych::DisallowedClass
+      end
+    else
+      specify 'Symbol is allowed to be load by default' do
+        result, filename = load_fixture('symbols.yaml')
+        expect(result[0]).to match_element(:foo, line: 1, column: 3, filename:)
+        expect(result[1]).to match_element(:bar, line: 2, column: 3, filename:)
+      end
+    end
+
+    context 'when the given YAML contains multiple documents' do
+      if multiple_documents
+        it 'parses all documents' do
+          result, filename = load_fixture('multiple_documents.yaml', multiple_documents: true)
+
+          expect(result[0]).to have_position_info(line: 2, column: 1, filename:)
+          expect(result[0][0]).to match_element('foo', line: 2, column: 3, filename:)
+          expect(result[0][1]).to match_element('bar', line: 3, column: 3, filename:)
+
+          expect(result[1]).to have_position_info(line: 5, column: 1, filename:)
+          expect(result[1][0]).to match_element('baz', line: 5, column: 3, filename:)
+          expect(result[1][1]).to match_element('qux', line: 6, column: 3, filename:)
+
+          expect(result[2]).to be_nil_element(line: 8, column: 1, filename:)
+        end
+      else
+        it 'parses the 1st documents only' do
+          result, filename = load_fixture('multiple_documents.yaml', multiple_documents: true)
+
+          expect(result.size).to eq 2
+          expect(result).to have_position_info(line: 2, column: 1, filename:)
+          expect(result[0]).to match_element('foo', line: 2, column: 3, filename:)
+          expect(result[1]).to match_element('bar', line: 3, column: 3, filename:)
+
+        end
+      end
+    end
+
     describe 'the permitted_classes option' do
-      it 'specifies additonal classed which are allowed to be safe_loaded' do
+      it 'specifies additonal classed which are allowed to be loaded' do
         expect { load_fixture('permitted_classes.yaml') }.to raise_error Psych::DisallowedClass
 
         result, filename = load_fixture('permitted_classes.yaml', permitted_classes: [Symbol, Date])
@@ -51,7 +95,7 @@ RSpec.describe YPS do
 
     describe 'the permitted_symbols option' do
       context 'when no symbols are specified' do
-        specify 'any symbols can be safe_loaded' do
+        specify 'any symbols can be loaded' do
           result, filename = load_fixture('symbols.yaml', permitted_classes: [Symbol])
           expect(result[0]).to match_element(:foo, line: 1, column: 3, filename:)
           expect(result[1]).to match_element(:bar, line: 2, column: 3, filename:)
@@ -59,7 +103,7 @@ RSpec.describe YPS do
       end
 
       context 'when symbols are specified' do
-        specify 'the given symbols can only be safe_loaded' do
+        specify 'the given symbols can only be loaded' do
           expect {
             load_fixture(
               'symbols.yaml',
@@ -94,13 +138,41 @@ RSpec.describe YPS do
       end
     end
 
-    describe 'the fallback option' do
-      it 'specifies the return value which will be returned when an empty YAML is given' do
-        result, _ = load_fixture('empty.yaml')
-        expect(result).to be_nil
+    unless file_input
+      describe 'the filename option' do
+        specify 'the file name given by this option will be added to each position info' do
+          filename = 'test.yaml'
+          result, _ = load_fixture('basic.yaml', filename:)
 
-        fallback = []
-        result, _ = load_fixture('empty.yaml', fallback:)
+          expect(result).to have_position_info(line: 1, column: 1, filename:)
+          expect(result['children']).to have_position_info(line: 2, column: 3, filename:)
+
+          expect(result['children'][0]).to have_position_info(line: 2, column: 5, filename:)
+          expect(result['children'][0]['name']).to match_element('Kanta', line: 2, column: 11, filename:)
+          expect(result['children'][0]['age']).to match_element(8, line: 3, column: 10, filename:)
+
+          expect(result['children'][1]).to have_position_info(line: 4, column: 5, filename:)
+          expect(result['children'][1]['name']).to match_element('Kaede', line: 4, column: 11, filename:)
+          expect(result['children'][1]['age']).to match_element(3, line: 5, column: 10, filename:)
+        end
+      end
+    end
+
+    describe 'the fallback option' do
+      if multiple_documents
+        specify 'the default fallback object is an empty array' do
+          result, _ = load_fixture('empty.yaml', check_fallback: true)
+          expect(result).to be_instance_of(Array).and be_empty
+        end
+      else
+        specify 'the default fallback object is nil' do
+          result, _ = load_fixture('empty.yaml', check_fallback: true)
+          expect(result).to be_nil
+        end
+      end
+      it 'specifies the return value which will be returned when an empty YAML is given' do
+        fallback = Object.new
+        result, _ = load_fixture('empty.yaml', check_fallback: true, fallback:)
         expect(result).to equal(fallback)
       end
     end
@@ -220,94 +292,90 @@ RSpec.describe YPS do
   end
 
   describe '.safe_load' do
-    def load_fixture(filename, ...)
+    def load_fixture(filename, multiple_documents: false, check_fallback: false, **kwargs)
       yaml = read_file_fixure(filename)
-      [YPS.safe_load(yaml, ...)]
+      [YPS.safe_load(yaml, **kwargs)]
     end
 
-    it_behaves_like 'an YAML loader'
-
-    specify 'Symbol is not allowed to be load by default' do
-      expect { load_fixture('symbols.yaml') }.to raise_error Psych::DisallowedClass
-    end
-
-    describe 'the filename option' do
-      specify 'the file name given by this option will be added to each position info' do
-        filename = 'test.yaml'
-        result, _ = load_fixture('basic.yaml', filename:)
-
-        expect(result).to have_position_info(line: 1, column: 1, filename:)
-        expect(result['children']).to have_position_info(line: 2, column: 3, filename:)
-
-        expect(result['children'][0]).to have_position_info(line: 2, column: 5, filename:)
-        expect(result['children'][0]['name']).to match_element('Kanta', line: 2, column: 11, filename:)
-        expect(result['children'][0]['age']).to match_element(8, line: 3, column: 10, filename:)
-
-        expect(result['children'][1]).to have_position_info(line: 4, column: 5, filename:)
-        expect(result['children'][1]['name']).to match_element('Kaede', line: 4, column: 11, filename:)
-        expect(result['children'][1]['age']).to match_element(3, line: 5, column: 10, filename:)
-      end
-    end
+    it_behaves_like 'an YAML loader', safe_loader: true, file_input: false, multiple_documents: false
   end
 
   describe '.load' do
-    def load_fixture(filename, ...)
+    def load_fixture(filename, multiple_documents: false, check_fallback: false, **kwargs)
       yaml = read_file_fixure(filename)
-      [YPS.load(yaml, ...)]
+      [YPS.load(yaml, **kwargs)]
     end
 
-    it_behaves_like 'an YAML loader'
-
-    specify 'Symbol is allowed to be load by default' do
-      result, filename = load_fixture('symbols.yaml')
-      expect(result[0]).to match_element(:foo, line: 1, column: 3, filename:)
-      expect(result[1]).to match_element(:bar, line: 2, column: 3, filename:)
-    end
-
-    describe 'the filename option' do
-      specify 'the file name given by this option will be added to each position info' do
-        filename = 'test.yaml'
-        result, _ = load_fixture('basic.yaml', filename:)
-
-        expect(result).to have_position_info(line: 1, column: 1, filename:)
-        expect(result['children']).to have_position_info(line: 2, column: 3, filename:)
-
-        expect(result['children'][0]).to have_position_info(line: 2, column: 5, filename:)
-        expect(result['children'][0]['name']).to match_element('Kanta', line: 2, column: 11, filename:)
-        expect(result['children'][0]['age']).to match_element(8, line: 3, column: 10, filename:)
-
-        expect(result['children'][1]).to have_position_info(line: 4, column: 5, filename:)
-        expect(result['children'][1]['name']).to match_element('Kaede', line: 4, column: 11, filename:)
-        expect(result['children'][1]['age']).to match_element(3, line: 5, column: 10, filename:)
-      end
-    end
+    it_behaves_like 'an YAML loader', safe_loader: false, file_input: false, multiple_documents: false
   end
 
   describe '.safe_load_file' do
-    def load_fixture(filename, ...)
+    def load_fixture(filename, multiple_documents: false, check_fallback: false, **kwargs)
       path = file_fixture_path(filename)
-      [YPS.safe_load_file(path, ...), path]
+      [YPS.safe_load_file(path, **kwargs), path]
     end
 
-    it_behaves_like 'an YAML loader'
-
-    specify 'Symbol is not allowed to be load by default' do
-      expect { load_fixture('symbols.yaml') }.to raise_error Psych::DisallowedClass
-    end
+    it_behaves_like 'an YAML loader', safe_loader: true, file_input: true, multiple_documents: false
   end
 
   describe '.load_file' do
-    def load_fixture(filename, ...)
+    def load_fixture(filename, multiple_documents: false, check_fallback: false, **kwargs)
       path = file_fixture_path(filename)
-      [YPS.load_file(path, ...), path]
+      [YPS.load_file(path, **kwargs), path]
     end
 
-    it_behaves_like 'an YAML loader'
+    it_behaves_like 'an YAML loader', safe_loader: false, file_input: true, multiple_documents: false
+  end
 
-    specify 'Symbol is allowed to be load by default' do
-      result, filename = load_fixture('symbols.yaml')
-      expect(result[0]).to match_element(:foo, line: 1, column: 3, filename:)
-      expect(result[1]).to match_element(:bar, line: 2, column: 3, filename:)
+  describe '.safe_load_stream' do
+    def load_fixture(filename, multiple_documents: false, check_fallback: false, **kwargs)
+      yaml = read_file_fixure(filename)
+      if multiple_documents || check_fallback
+        [YPS.safe_load_stream(yaml, **kwargs)]
+      else
+        [YPS.safe_load_stream(yaml, **kwargs).first]
+      end
     end
+
+    it_behaves_like 'an YAML loader', safe_loader: true, file_input: false, multiple_documents: true
+  end
+
+  describe '.load_stream' do
+    def load_fixture(filename, multiple_documents: false, check_fallback: false, **kwargs)
+      yaml = read_file_fixure(filename)
+      if multiple_documents || check_fallback
+        [YPS.load_stream(yaml, **kwargs)]
+      else
+        [YPS.load_stream(yaml, **kwargs).first]
+      end
+    end
+
+    it_behaves_like 'an YAML loader', safe_loader: false, file_input: false, multiple_documents: true
+  end
+
+  describe '.safe_load_stream_file' do
+    def load_fixture(filename, multiple_documents: false, check_fallback: false, **kwargs)
+      path = file_fixture_path(filename)
+      if multiple_documents || check_fallback
+        [YPS.safe_load_stream_file(path, **kwargs), path]
+      else
+        [YPS.safe_load_stream_file(path, **kwargs).first, path]
+      end
+    end
+
+    it_behaves_like 'an YAML loader', safe_loader: true, file_input: true, multiple_documents: true
+  end
+
+  describe '.load_stream_file' do
+    def load_fixture(filename, multiple_documents: false, check_fallback: false, **kwargs)
+      path = file_fixture_path(filename)
+      if multiple_documents || check_fallback
+        [YPS.load_stream_file(path, **kwargs), path]
+      else
+        [YPS.load_stream_file(path, **kwargs).first, path]
+      end
+    end
+
+    it_behaves_like 'an YAML loader', safe_loader: false, file_input: true, multiple_documents: true
   end
 end

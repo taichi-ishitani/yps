@@ -28,10 +28,24 @@ gem install yps
 
 You can use the methods below to load a YAML code into Ruby objects with their position information (file name, line, and column).
 
-* `YPS.safe_load`/`YPS.load`
+* `YPS.safe_load`/`YPS.load`/`YPS.safe_load_stram`/`YPS.load_stream`
     * Load the given YAML string into Ruby objects with position information.
-* `YPS.safe_load_file`/`YPS.load_file`
+* `YPS.safe_load_file`/`YPS.load_file`/`YPS.safe_load_stram_file`/`YPS.load_stream_file`
     * Load the YAML code read from the given file path into Ruby objects with position information.
+
+For a YAML code that contains multiple documents, folowing methods load the 1st document only.
+
+* `YPS.safe_load`
+* `YPS.load`
+* `YPS.safe_load_file`
+* `YPS.load_file`
+
+On the other hand, following methods load all given documents and return them as a list.
+
+* `YPS.safe_load_stram`
+* `YPS.load_stream`
+* `YPS.safe_load_stram_file`
+* `YPS.load_stream_file`
 
 Parsed objects, except for hash keys, have their own position information.
 You can use the `position` method to get position information in the original YAML of the receiver object.
@@ -55,6 +69,25 @@ YAML
 yaml['children'].each do |child|
   child.each do |key, value|
     puts "#{key}: #{value} (#{value.position})"
+  end
+end
+
+yaml = YPS.load_stream(<<~'YAML')
+- 0
+- 1
+---
+- foo
+- bar
+YAML
+
+# output
+# 0 (filename: unknown line 1 column 3)
+# 1 (filename: unknown line 2 column 3)
+# foo (filename: unknown line 4 column 3)
+# bar (filename: unknown line 5 column 3)
+yaml.each do |list|
+  list.each do |item|
+    puts "#{item} (#{item.position})"
   end
 end
 ```

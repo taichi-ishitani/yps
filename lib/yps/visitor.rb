@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module YPS # :nodoc: all
-  module Visitors
+  module Visitor
     using NodeExtension
 
     module Common
@@ -32,6 +32,23 @@ module YPS # :nodoc: all
 
     class NoAliasRuby < Psych::Visitors::NoAliasRuby
       include Common
+    end
+
+    def self.create( # rubocop:disable Metrics/ParameterLists
+      permitted_classes, permitted_symbols, aliases,
+      symbolize_names, freeze, strict_integer, value_class
+    )
+      class_loader = Psych::ClassLoader::Restricted.new(
+        permitted_classes.map(&:to_s), permitted_symbols.map(&:to_s)
+      )
+      scanner =
+        if RUBY_VERSION >= '3.2.0'
+          Psych::ScalarScanner.new(class_loader, strict_integer:)
+        else
+          Psych::ScalarScanner.new(class_loader)
+        end
+      (aliases && ToRuby || NoAliasRuby)
+        .new(scanner, class_loader, value_class, symbolize_names:, freeze:)
     end
   end
 end
