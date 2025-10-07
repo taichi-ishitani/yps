@@ -33,7 +33,7 @@ You can use the methods below to load a YAML code into Ruby objects with their p
 * `YPS.safe_load_file`/`YPS.load_file`/`YPS.safe_load_stream_file`/`YPS.load_stream_file`
     * Load the YAML code read from the given file path into Ruby objects with position information.
 
-For a YAML code that contains multiple documents, folowing methods load the 1st document only.
+For a YAML code that contains multiple documents, following methods load the 1st document only.
 
 * `YPS.safe_load`
 * `YPS.load`
@@ -91,6 +91,8 @@ yaml.each do |list|
   end
 end
 ```
+
+For more details about these APIs, please visit [here](https://taichi-ishitani.github.io/yps/).
 
 ## Contributing
 
