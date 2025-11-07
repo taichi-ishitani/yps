@@ -15,6 +15,7 @@ default = true
 
 [smells]
 mode = "comment"
+function_parameters.threshold  = 15
 
 [[plugin]]
 name = "rubocop"

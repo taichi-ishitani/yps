@@ -19,6 +19,10 @@ RSpec.describe YPS do
     have_attributes(value: be_nil).and have_position_info(line:, column:, filename:)
   end
 
+  def be_false_element(line:, column:, filename: nil)
+    have_attributes(value: equal(false)).and have_position_info(line:, column:, filename:)
+  end
+
   def file_fixture_path(filename)
     File.join(__dir__, 'fixtures', filename)
   end
@@ -119,6 +123,20 @@ RSpec.describe YPS do
           expect(result[0]).to match_element(:foo, line: 1, column: 3, filename:)
           expect(result[1]).to match_element(:bar, line: 2, column: 3, filename:)
         end
+      end
+    end
+
+    describe 'the unwrapped_classes option' do
+      it 'specified classes whose objects are not wrapped with the wrapper class' do
+        result, filename = load_fixture('unwrapped_classes.yaml')
+        expect(result).to have_position_info(line: 1, column: 1, filename:)
+        expect(result[0]).to be_nil_element(line: 1, column: 3, filename:)
+        expect(result[1]).to be_false_element(line: 2, column: 3, filename:)
+
+        result, filename = load_fixture('unwrapped_classes.yaml', unwrapped_classes: [NilClass, FalseClass])
+        expect(result).to have_position_info(line: 1, column: 1, filename:)
+        expect(result[0]).to be_nil
+        expect(result[1]).to equal(false)
       end
     end
 

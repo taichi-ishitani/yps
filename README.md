@@ -28,9 +28,15 @@ gem install yps
 
 You can use the methods below to load a YAML code into Ruby objects with their position information (file name, line, and column).
 
-* `YPS.safe_load`/`YPS.load`/`YPS.safe_load_stream`/`YPS.load_stream`
+* `YPS.safe_load`
+* `YPS.load`
+* `YPS.safe_load_stream`
+* `YPS.load_stream`
     * Load the given YAML string into Ruby objects with position information.
-* `YPS.safe_load_file`/`YPS.load_file`/`YPS.safe_load_stream_file`/`YPS.load_stream_file`
+* `YPS.safe_load_file`
+* `YPS.load_file`
+* `YPS.safe_load_stream_file`
+* `YPS.load_stream_file`
     * Load the YAML code read from the given file path into Ruby objects with position information.
 
 For a YAML code that contains multiple documents, following methods load the 1st document only.
@@ -90,6 +96,35 @@ yaml.each do |list|
     puts "#{item} (#{item.position})"
   end
 end
+```
+
+By default, all objects, including `false` and `nil`, are wrapped with the wrapper class.
+This is important because wrapped `false` and `nil` objects no longer act as falsy values.
+You can use the `unwrapped_classes` option to avoid this situation.
+Objects belonging to classes specified by this option are returned unwrapped but will not have access to their position information.
+
+```ruby
+yaml = YPS.load(<<~'YAML')
+- false
+- null
+YAML
+
+# output
+# false
+# nil
+puts (yaml[0] || 'foo').inspect
+puts (yaml[1] || 'bar').inspect
+
+yaml = YPS.load(<<~'YAML', unwrapped_classes: [FalseClass, NilClass])
+- false
+- null
+YAML
+
+# output
+# "foo"
+# "bar"
+puts (yaml[0] || 'foo').inspect
+puts (yaml[1] || 'bar').inspect
 ```
 
 For more details about these APIs, please visit [here](https://taichi-ishitani.github.io/yps/).
