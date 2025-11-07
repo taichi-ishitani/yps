@@ -5,24 +5,36 @@ module YPS # :nodoc: all
     using NodeExtension
 
     module Common
-      def initialize(scanner, class_loader, value_class, symbolize_names:, freeze:)
+      def initialize( # rubocop:disable Metrics/ParameterLists
+        scanner, class_loader, unwrapped_classes, value_class,
+        symbolize_names:, freeze:
+      )
         super(scanner, class_loader, symbolize_names:, freeze:)
+        @unwrapped_classes = unwrapped_classes
         @value_class = value_class
       end
 
       def accept(node)
         object = super
-        create_wrapped_object(object, node)
+        if unwrap?(object, node)
+          object
+        else
+          create_wrapped_object(object, node)
+        end
       end
 
       private
 
       def create_wrapped_object(object, node)
-        return object if node.document? || node.mapping_key?
-
         pos = Position.new(node.filename, node.start_line + 1, node.start_column + 1)
         obj = @value_class.new(object, pos)
         @freeze && obj.freeze || obj
+      end
+
+      def unwrap?(object, node)
+        node.document? ||
+          node.mapping_key? ||
+          @unwrapped_classes.any? { |klass| object.instance_of?(klass) }
       end
     end
 
@@ -35,8 +47,8 @@ module YPS # :nodoc: all
     end
 
     def self.create( # rubocop:disable Metrics/ParameterLists
-      permitted_classes, permitted_symbols, aliases,
-      symbolize_names, freeze, strict_integer, value_class
+      permitted_classes, permitted_symbols, unwrapped_classes,
+      aliases, symbolize_names, freeze, strict_integer, value_class
     )
       class_loader = Psych::ClassLoader::Restricted.new(
         permitted_classes.map(&:to_s), permitted_symbols.map(&:to_s)
@@ -48,7 +60,7 @@ module YPS # :nodoc: all
           Psych::ScalarScanner.new(class_loader)
         end
       (aliases && ToRuby || NoAliasRuby)
-        .new(scanner, class_loader, value_class, symbolize_names:, freeze:)
+        .new(scanner, class_loader, unwrapped_classes, value_class, symbolize_names:, freeze:)
     end
   end
 end

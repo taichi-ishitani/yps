@@ -37,6 +37,9 @@ module YPS
     #   Array containing additional classes allowed to be loaded.
     # +permitted_symbols+::
     #   Array containing Symbols allowed to be loaded. By default, any symbol can be loaded.
+    # +unwrapped_classes+::
+    #   Array containing classes whose objects are not wrapped with the wrapper class.
+    #   By default, all objects are wrapped.
     # +aliases+::
     #   Aliases can be used if set to true. By default, aliases are not allowed.
     # +filename+::
@@ -57,15 +60,15 @@ module YPS
     # See also Psych.safe_load[https://docs.ruby-lang.org/en/master/Psych.html#method-c-safe_load].
     def safe_load( # rubocop:disable Metrics/ParameterLists
       yaml,
-      permitted_classes: [], permitted_symbols: [], aliases: false,
-      filename: nil, fallback: nil, symbolize_names: false, freeze: false,
-      strict_integer: false, value_class: Value
+      permitted_classes: [], permitted_symbols: [], unwrapped_classes: [],
+      aliases: false, filename: nil, fallback: nil, symbolize_names: false,
+      freeze: false, strict_integer: false, value_class: Value
     )
       Parser.parse(yaml, filename) do |node|
         visitor =
           Visitor.create(
-            permitted_classes, permitted_symbols, aliases,
-            symbolize_names, freeze, strict_integer, value_class
+            permitted_classes, permitted_symbols, unwrapped_classes,
+            aliases, symbolize_names, freeze, strict_integer, value_class
           )
         return visitor.accept(node)
       end
@@ -106,8 +109,8 @@ module YPS
     # See also YPS.safe_load
     def safe_load_stream( # rubocop:disable Metrics/ParameterLists
       yaml,
-      permitted_classes: [], permitted_symbols: [], aliases: false,
-      filename: nil, fallback: DEFAULT_VALUE, symbolize_names: false,
+      permitted_classes: [], permitted_symbols: [], unwrapped_classes: [],
+      aliases: false, filename: nil, fallback: DEFAULT_VALUE, symbolize_names: false,
       freeze: false, strict_integer: false, value_class: Value
     )
       visitor = nil
@@ -115,8 +118,8 @@ module YPS
       Parser.parse(yaml, filename) do |node|
         visitor ||=
           Visitor.create(
-            permitted_classes, permitted_symbols, aliases,
-            symbolize_names, freeze, strict_integer, value_class
+            permitted_classes, permitted_symbols, unwrapped_classes,
+            aliases, symbolize_names, freeze, strict_integer, value_class
           )
         results << visitor.accept(node)
       end
