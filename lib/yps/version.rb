@@ -2,5 +2,5 @@
 
 module YPS
   # The version of YPS
-  VERSION = '0.2.0'
+  VERSION = '1.0.0'
 end
