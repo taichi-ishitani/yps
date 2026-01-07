@@ -7,7 +7,7 @@
 
 # YPS: YAML Positioning System
 
-YPS is a gem to parse YAML and add position information (file name, line and column) to each parsed elements.
+YPS is a gem that parses YAML and adds position information (file name, line, and column) to each parsed element.
 This is useful for error reporting and debugging, allowing developers to precisely locate an issue within the original YAML file.
 
 ## Installation
@@ -26,27 +26,28 @@ gem install yps
 
 ## Usage
 
-You can use the methods below to load a YAML code into Ruby objects with their position information (file name, line, and column).
+You can use the methods below to load YAML content into Ruby objects with position information (file name, line, and column).
+
+* Load the given YAML string into Ruby objects with position information
+    * `YPS.safe_load`
+    * `YPS.load`
+    * `YPS.safe_load_stream`
+    * `YPS.load_stream`
+
+* Load the YAML read from the given file path into Ruby objects with position information
+    * `YPS.safe_load_file`
+    * `YPS.load_file`
+    * `YPS.safe_load_stream_file`
+    * `YPS.load_stream_file`
+
+For YAML that contains multiple documents, the following methods load only the first document.
 
 * `YPS.safe_load`
 * `YPS.load`
-* `YPS.safe_load_stream`
-* `YPS.load_stream`
-    * Load the given YAML string into Ruby objects with position information.
-* `YPS.safe_load_file`
-* `YPS.load_file`
-* `YPS.safe_load_stream_file`
-* `YPS.load_stream_file`
-    * Load the YAML code read from the given file path into Ruby objects with position information.
-
-For a YAML code that contains multiple documents, following methods load the 1st document only.
-
-* `YPS.safe_load`
-* `YPS.load`
 * `YPS.safe_load_file`
 * `YPS.load_file`
 
-On the other hand, following methods load all given documents and return them as a list.
+In contrast, the following methods load all documents and return them as a list.
 
 * `YPS.safe_load_stream`
 * `YPS.load_stream`
@@ -98,8 +99,10 @@ yaml.each do |list|
 end
 ```
 
-By default, all objects, including `false` and `nil`, are wrapped with the wrapper class.
-This is important because wrapped `false` and `nil` objects no longer act as falsy values.
+### Handling of `false` and `nil` values
+
+By default, all objects, including `false` and `nil`, are wrapped in a wrapper class.
+Note that wrapped `false` and `nil` values will not be treated as falsy.
 You can use the `unwrapped_classes` option to avoid this situation.
 Objects belonging to classes specified by this option are returned unwrapped but will not have access to their position information.
 
@@ -134,7 +137,7 @@ For more details about these APIs, please visit [here](https://taichi-ishitani.g
 Bug reports and pull requests are welcome on GitHub at https://github.com/taichi-ishitani/yps.
 
 * [Issue Tracker](https://github.com/taichi-ishitani/yps/issues)
-* [Pull Requesst](https://github.com/taichi-ishitani/yps/pulls)
+* [Pull Request](https://github.com/taichi-ishitani/yps/pulls)
 * [Discussion](https://github.com/taichi-ishitani/yps/discussions)
 
 ## Copyright & License
