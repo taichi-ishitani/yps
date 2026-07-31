@@ -3,7 +3,7 @@
 [![Maintainability](https://qlty.sh/gh/taichi-ishitani/projects/yps/maintainability.svg)](https://qlty.sh/gh/taichi-ishitani/projects/yps)
 [![codecov](https://codecov.io/gh/taichi-ishitani/yps/graph/badge.svg?token=JwmT4kfLYG)](https://codecov.io/gh/taichi-ishitani/yps)
 
-[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/A0A231E3I)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/A0A231E3I)
 
 # YPS: YAML Positioning System
 
